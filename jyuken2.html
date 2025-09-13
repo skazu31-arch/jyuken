@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>受験応援アプリ</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4a4a4a;
+        }
+        #countdown {
+            font-size: 3em;
+            color: #e63946;
+            margin: 20px 0;
+            font-weight: bold;
+            animation: twinkle 1.5s infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { text-shadow: 0 0 5px #ffcc00, 0 0 10px #ffcc00, 0 0 15px #ffcc00; }
+            100% { text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ffd700; }
+        }
+        .app-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        #study-meter {
+            width: 100%;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        #study-progress {
+            height: 100%;
+            background-color: #5cb85c;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .input-group label {
+            font-size: 1em;
+        }
+        select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="date"], input[type="text"] {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        .stats-section p {
+            font-size: 1.1em;
+            margin: 5px 0;
+        }
+        .clear-data-button {
+            margin-top: 20px;
+            background-color: #dc3545;
+        }
+        .clear-data-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Task List Styles */
+        #task-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+        #task-list li {
+            background: #f8f9fa;
+            border-left: 5px solid #007bff;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        #task-list li.completed {
+            background: #e0e0e0;
+            color: #888;
+            border-left: 5px solid #888;
+            text-decoration: line-through;
+        }
+        .task-actions button {
+            background: none;
+            border: none;
+            color: #dc3545;
+            padding: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .task-actions button:hover {
+            color: #c82333;
+        }
+        #task-list li .task-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        #task-list li input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .quote-section blockquote {
+            font-style: italic;
+            margin: 0;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+        }
+        .quote-section cite {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>受験まであと</h1>
+    <div id="countdown"></div>
+    
+    <div class="app-section">
+        <h2>今日の勉強時間</h2>
+        <div id="study-meter">
+            <div id="study-progress"></div>
+        </div>
+        <p><span id="current-study-hours">0</span> / <span id="target-study-hours">3</span> 時間</p>
+        <div class="input-group">
+            <label for="study-hour-select">時間:</label>
+            <select id="study-hour-select"></select>
+            <label for="study-minute-select">分:</label>
+            <select id="study-minute-select"></select>
+            <button onclick="addStudyTime()">追加</button>
+        </div>
+    </div>
+
+    <div class="app-section">
+        <h2>今日のタスク</h2>
+        <ul id="task-list"></ul>
+        <div class="input-group">
+            <input type="text" id="new-task-input" placeholder="タスクを追加">
+            <button onclick="addTask()">追加</button>
+        </div>
+    </div>
+
+    <div class="app-section">
+        <h2>今日の言葉</h2>
+        <div id="daily-quote"></div>
+    </div>
+
+    <div class="app-section stats-section">
+        <h2>学習統計</h2>
+        <p>累計勉強時間: <span id="total-study-hours">0</span> 時間</p>
+        <p>直近7日の平均: <span id="weekly-average-hours">0</span> 時間</p>
+    </div>
+
+    <div class="app-section">
+        <h2>日別勉強時間グラフ</h2>
+        <canvas id="studyChart"></canvas>
+    </div>
+
+    <div class="app-section">
+        <h2>過去の記録を修正</h2>
+        <div class="input-group">
+            <input type="date" id="date-input">
+            <label for="correction-hour-select">時間:</label>
+            <select id="correction-hour-select"></select>
+            <label for="correction-minute-select">分:</label>
+            <select id="correction-minute-select"></select>
+            <button onclick="correctStudyTime()">修正・追加</button>
+        </div>
+    </div>
+
+    <button class="clear-data-button" onclick="clearData()">全データをクリア</button>
+</div>
+
+<script>
+    const examDate = new Date('2027-02-01T00:00:00');
+    const targetHours = 3;
+    const studyDataKey = 'studyData';
+    const tasksDataKey = 'tasksData';
+    let studyData = JSON.parse(localStorage.getItem(studyDataKey)) || {};
+    let tasksData = JSON.parse(localStorage.getItem(tasksDataKey)) || [];
+    let studyChartInstance;
+
+    const quotes = [
+        { text: '成功の秘訣は、常に目標に向かって前進することだ。', author: 'ウォルト・ディズニー' },
+        { text: '努力は必ず報われる。もし報われない努力があるのなら、それはまだ努力と呼べない。', author: '王貞治' },
+        { text: 'あきらめたら、そこで試合終了ですよ。', author: '安西先生（スラムダンク）' },
+        { text: '一歩一歩が、遠い道のりを征服する唯一の方法である。', author: 'アルフレッド・ド・ミュッセ' },
+        { text: '未来を予測する最善の方法は、それを自分で創り出すことだ。', author: 'ピーター・ドラッカー' },
+        { text: '昨日から学び、今日を生き、明日へ期待せよ。', author: 'アルバート・アインシュタイン' },
+        { text: '失敗を恐れるな。成功を妨げる唯一のものは、失敗を恐れる心である。', author: 'フランク・リンカーン' },
+        { text: '困難な時こそ、自分の強さを知るチャンスだ。', author: 'アルベルト・アインシュタイン' },
+        { text: '夢を叶える秘訣は、4つのCに集約される。好奇心、自信、勇気、そして継続だ。', author: 'ウォルト・ディズニー' },
+        { text: '努力がすべて報われるとは限らないが、成功した者は皆、努力している。', author: 'イチロー' },
+        { text: '自分自身を信じ、自分の能力に自信を持つこと。謙虚で理性的な自信がなければ、成功も幸福もあり得ない。', author: 'ノーマン・ヴィンセント・ピール' },
+        { text: '才能は開花のチャンスを待っている。', author: 'ヘレン・ケラー' },
+        { text: '人生とは、自分自身を見つけることではなく、自分自身を創り出すことである。', author: 'ジョージ・バーナード・ショー' },
+        { text: '学び続けることをやめない限り、人生は終わりではない。', author: 'アルフレッド・ノーベル' },
+        { text: '大志を抱け。', author: 'ウィリアム・スミス・クラーク' },
+        { text: '夢なき者に理想なし。理想なき者に計画なし。計画なき者に実行なし。実行なき者に成功なし。故に、夢なき者に成功なし。', author: '吉田松陰' },
+        { text: '道は開ける。', author: 'デール・カーネギー' },
+        { text: '我々はみな、傑出した才能を持っている。だが、その才能をどこで使うかを見つけなければならない。', author: 'ガリレオ・ガリレイ' },
+        { text: 'もしあなたが本当に何かをしたいのなら、道は必ず見つかる。', author: 'ウォルト・ディズニー' },
+        { text: '努力する才能は、最も重要な才能である。', author: 'アインシュタイン' },
+        { text: '人生で成功するのに必要なのは、無知と自信だ。', author: 'マーク・トウェイン' },
+        { text: '困難なことばかりが人生ではない。しかし、困難なことを乗り越えたときに、最も人生を学ぶ。', author: 'ヘンリー・フォード' },
+        { text: '人は成功するために生まれてきたのではない。失敗から学ぶために生まれてきたのだ。', author: 'マルコムX' },
+        { text: '成功への道は、常に工事中である。', author: 'リリー・トムリン' },
+        { text: '最高の復讐は、最高の成功を収めることだ。', author: 'フランク・シナトラ' },
+        { text: '成功とは、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: '人生は短い。だから、やりたいことをやりなさい。', author: 'スティーブ・ジョブズ' },
+        { text: '人生を賭けてまでやるべきことが見つからないのなら、人生を賭けるだけの価値があるものを探しなさい。', author: 'オスカー・ワイルド' },
+        { text: '完璧を目指すな。完璧なんてありえない。しかし、完璧を目指して努力すれば、きっと素晴らしいものになる。', author: 'ヴィンス・ロンバルディ' },
+        { text: '行動を起こす前に、まずは考えなさい。', author: 'トーマス・エジソン' },
+        { text: '小さなことを積み重ねることが、とんでもないところへ行くただ一つの道。', author: 'イチロー' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生は自転車に乗るのと似ている。バランスを保つには、進み続けなければならない。', author: 'アルバート・アインシュタイン' },
+        { text: '才能よりも努力。', author: 'ミケランジェロ' },
+        { text: '自分を信じれば、できることはすべてできる。', author: 'ジョージ・ワシントン・カーヴァー' },
+        { text: '成功は努力の果実だ。', author: 'ソクラテス' },
+        { text: '偉大な人物は、困難な状況下でも冷静さを保つ。', author: 'ナポレオン・ボナパルト' },
+        { text: '努力すれば必ず報われる。', author: 'マザー・テレサ' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '今日を生きよ。', author: 'フランクリン・ルーズベルト' },
+        { text: '成功とは、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: '失敗は成功の母。', author: '日本のことわざ' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
+        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
+        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
+        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
+        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
+        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
+        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
+        { text: '学びを愛しなさい。', author: 'プラトン' },
+        { text: '思考は行動の源である。', author: 'ソクラテス' },
+        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
+        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
+        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' }
+    ];
+
+    function createTimeSelectors() {
+        const hourSelects = ['study-hour-select', 'correction-hour-select'];
+        hourSelects.forEach(id => {
+            const select = document.getElementById(id);
+            for (let i = 0; i <= 20; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
+            }
+        });
+
+        const minuteSelects = ['study-minute-select', 'correction-minute-select'];
+        minuteSelects.forEach(id => {
+            const select = document.getElementById(id);
+            for (let i = 0; i <= 50; i += 10) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
+            }
+        });
+    }
+
+    function updateCountdown() {
+        const now = new Date();
+        const diff = examDate - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        document.getElementById('countdown').innerText = `${days}日`;
+    }
+
+    function displayDailyQuote() {
+        const today = new Date();
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+        const diffInDays = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
+        
+        // 日付のハッシュ値を利用して、常に同じ名言を選択する
+        const hash = diffInDays % quotes.length;
+        const quote = quotes[hash];
+
+        const quoteElement = document.getElementById('daily-quote');
+        quoteElement.innerHTML = `
+            <blockquote>${quote.text}</blockquote>
+            <cite>— ${quote.author}</cite>
+        `;
+    }
+
+    function updateDisplay() {
+        const today = new Date().toISOString().slice(0, 10);
+        const todayHours = studyData[today] || 0;
+        
+        const progress = Math.min(100, (todayHours / targetHours) * 100);
+        document.getElementById('study-progress').style.width = `${progress}%`;
+        document.getElementById('current-study-hours').innerText = todayHours.toFixed(1);
+
+        let totalHours = 0;
+        let weeklyHours = 0;
+        const labels = [];
+        const data = [];
+        const annotations = [];
+        const todayDate = new Date();
+        const startDate = new Date('2025-09-01T00:00:00');
+        const endDate = new Date(examDate);
+        
+        let currentDate = new Date(startDate);
+        let monthCount = 0;
+
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().slice(0, 10);
+            const hours = studyData[dateStr] || 0;
+            labels.push(currentDate.getMonth() + 1 + '/' + currentDate.getDate());
+            data.push(hours);
+
+            const isFirstDay = currentDate.getDate() === 1;
+            if (isFirstDay) {
+                annotations.push({
+                    type: 'line',
+                    mode: 'vertical',
+                    scaleID: 'x',
+                    value: monthCount,
+                    borderColor: 'rgba(0, 0, 0, 0.2)',
+                    borderWidth: 1,
+                    label: {
+                        enabled: true,
+                        content: `${currentDate.getMonth() + 1}月1日`,
+                        position: 'top',
+                        font: {
+                            size: 10
+                        }
+                    }
+                });
+            }
+            monthCount++;
+
+            totalHours += hours;
+
+            const oneWeekAgo = new Date(todayDate);
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            if (currentDate >= oneWeekAgo && currentDate <= todayDate) {
+                weeklyHours += hours;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const weeklyAverage = (weeklyHours / 7).toFixed(1);
+        document.getElementById('total-study-hours').innerText = totalHours.toFixed(1);
+        document.getElementById('weekly-average-hours').innerText = weeklyAverage;
+
+        if (studyChartInstance) {
+            studyChartInstance.destroy();
+        }
+
+        const ctx = document.getElementById('studyChart').getContext('2d');
+        studyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '勉強時間（時間）',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 90,
+                            minRotation: 90,
+                            callback: function(val, index) {
+                                const date = new Date(startDate);
+                                date.setDate(startDate.getDate() + index);
+                                return date.getDate() === 1 ? `${date.getMonth() + 1}/${date.getDate()}` : '';
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: {
+                            display: true,
+                            text: '時間'
+                        }
+                    }
+                },
+                plugins: {
+                    annotation: {
+                        annotations: annotations
+                    }
+                }
+            }
+        });
+        renderTasks();
+    }
+
+    function addStudyTime() {
+        const hours = parseInt(document.getElementById('study-hour-select').value) || 0;
+        const minutes = parseInt(document.getElementById('study-minute-select').value) || 0;
+        
+        if (hours > 0 || minutes > 0) {
+            const addedHours = hours + (minutes / 60);
+            const today = new Date().toISOString().slice(0, 10);
+            studyData[today] = (studyData[today] || 0) + addedHours;
+            localStorage.setItem(studyDataKey, JSON.stringify(studyData));
+            updateDisplay();
+            document.getElementById('study-hour-select').value = 0;
+            document.getElementById('study-minute-select').value = 0;
+        }
+    }
+
+    function correctStudyTime() {
+        const dateInput = document.getElementById('date-input').value;
+        const hours = parseInt(document.getElementById('correction-hour-select').value) || 0;
+        const minutes = parseInt(document.getElementById('correction-minute-select').value) || 0;
+
+        if (dateInput && (hours > 0 || minutes > 0)) {
+            const totalHours = hours + (minutes / 60);
+            studyData[dateInput] = totalHours;
+            localStorage.setItem(studyDataKey, JSON.stringify(studyData));
+            updateDisplay();
+            document.getElementById('date-input').value = '';
+            document.getElementById('correction-hour-select').value = 0;
+            document.getElementById('correction-minute-select').value = 0;
+        }
+    }
+    
+    function renderTasks() {
+        const taskList = document.getElementById('task-list');
+        taskList.innerHTML = '';
+        tasksData.forEach((task, index) => {
+            const li = document.createElement('li');
+            if (task.completed) {
+                li.classList.add('completed');
+            }
+            li.innerHTML = `
+                <div class="task-content">
+                    <input type="checkbox" onclick="toggleTaskCompletion(${index})" ${task.completed ? 'checked' : ''}>
+                    <span>${task.text}</span>
+                </div>
+                <div class="task-actions">
+                    <button onclick="editTask(${index})">編集</button>
+                    <button onclick="deleteTask(${index})">削除</button>
+                </div>
+            `;
+            taskList.appendChild(li);
+        });
+    }
+
+    function addTask() {
+        const newTaskInput = document.getElementById('new-task-input');
+        const taskText = newTaskInput.value.trim();
+        if (taskText) {
+            tasksData.push({ text: taskText, completed: false });
+            localStorage.setItem(tasksDataKey, JSON.stringify(tasksData));
+            newTaskInput.value = '';
+            renderTasks();
+        }
+    }
+
+    function toggleTaskCompletion(index) {
+        tasksData[index].completed = !tasksData[index].completed;
+        localStorage.setItem(tasksDataKey, JSON.stringify(tasksData));
+        renderTasks();
+    }
+
+    function editTask(index) {
+        const newTaskText = prompt('タスクを編集', tasksData[index].text);
+        if (newTaskText !== null && newTaskText.trim() !== '') {
+            tasksData[index].text = newTaskText.trim();
+            localStorage.setItem(tasksDataKey, JSON.stringify(tasksData));
+            renderTasks();
+        }
+    }
+
+    function deleteTask(index) {
+        if (confirm('このタスクを削除しますか？')) {
+            tasksData.splice(index, 1);
+            localStorage.setItem(tasksDataKey, JSON.stringify(tasksData));
+            renderTasks();
+        }
+    }
+
+    function clearData() {
+        if (confirm('全ての勉強時間とタスクデータを削除しますか？')) {
+            localStorage.removeItem(studyDataKey);
+            localStorage.removeItem(tasksDataKey);
+            studyData = {};
+            tasksData = [];
+            updateDisplay();
+            alert('データがクリアされました。');
+        }
+    }
+    
+    createTimeSelectors();
+    updateCountdown();
+    updateDisplay();
+    displayDailyQuote();
+</script>
+
+</body>
+</html>
