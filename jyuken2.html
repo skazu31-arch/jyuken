@@ -61,8 +61,12 @@
             align-items: center;
             gap: 10px;
             margin-top: 10px;
-            /* 追加 */
             flex-wrap: wrap; 
+        }
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 5px; /* ラベルとプルダウンの間隔 */
         }
         .input-group label {
             font-size: 1em;
@@ -163,21 +167,20 @@
             font-size: 0.9em;
             color: #555;
         }
-        /* 追加 */
+        /* 768px以下の画面に適用 */
         @media (max-width: 768px) {
             .input-group {
-                flex-direction: column;
-                align-items: stretch;
+                display: flex;
+                flex-wrap: wrap; 
+                justify-content: center;
+                align-items: center;
             }
-            .input-group label,
-            .input-group select,
-            .input-group input {
-                width: 100%;
-                box-sizing: border-box;
-                margin-bottom: 10px;
+            .input-group > * {
+                margin: 5px;
             }
             .input-group button {
                 width: 100%;
+                margin-top: 10px;
             }
         }
     </style>
@@ -195,10 +198,14 @@
         </div>
         <p><span id="current-study-hours">0</span> / <span id="target-study-hours">3</span> 時間</p>
         <div class="input-group">
-            <label for="study-hour-select">時間:</label>
-            <select id="study-hour-select"></select>
-            <label for="study-minute-select">分:</label>
-            <select id="study-minute-select"></select>
+            <div class="select-group">
+                <label for="study-hour-select">時間:</label>
+                <select id="study-hour-select"></select>
+            </div>
+            <div class="select-group">
+                <label for="study-minute-select">分:</label>
+                <select id="study-minute-select"></select>
+            </div>
             <button onclick="addStudyTime()">追加</button>
         </div>
     </div>
@@ -232,10 +239,14 @@
         <h2>過去の記録を修正</h2>
         <div class="input-group">
             <input type="date" id="date-input">
-            <label for="correction-hour-select">時間:</label>
-            <select id="correction-hour-select"></select>
-            <label for="correction-minute-select">分:</label>
-            <select id="correction-minute-select"></select>
+            <div class="select-group">
+                <label for="correction-hour-select">時間:</label>
+                <select id="correction-hour-select"></select>
+            </div>
+            <div class="select-group">
+                <label for="correction-minute-select">分:</label>
+                <select id="correction-minute-select"></select>
+            </div>
             <button onclick="correctStudyTime()">修正・追加</button>
         </div>
     </div>
@@ -295,94 +306,6 @@
         { text: '今日を生きよ。', author: 'フランクリン・ルーズベルト' },
         { text: '成功とは、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
         { text: '失敗は成功の母。', author: '日本のことわざ' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
-        { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
-        { text: '人生は学び続ける旅だ。', author: 'セネカ' },
-        { text: '学びを愛しなさい。', author: 'プラトン' },
-        { text: '思考は行動の源である。', author: 'ソクラテス' },
-        { text: 'あなたの可能性を信じなさい。', author: 'ナポレオン・ヒル' },
-        { text: '成功は、日々の小さな努力の積み重ねでしかない。', author: 'ロバート・コリアー' },
-        { text: '人生で最も重要なことは、常に学び続けることだ。', author: 'アルバート・アインシュタイン' },
-        { text: 'あなたの未来は、今日あなたが何をするかにかかっている。', author: 'マハトマ・ガンディー' },
-        { text: '自分自身を信じなさい。', author: 'フランクリン・ルーズベルト' },
-        { text: '私は失敗したことがない。ただ、1万通りのうまく行かない方法を見つけただけだ。', author: 'トーマス・エジソン' },
-        { text: '成功は、熱意を失わずに失敗から失敗へと歩き続けることだ。', author: 'ウィンストン・チャーチル' },
         { text: 'あなたの情熱が、あなたの成功の鍵だ。', author: 'ハーバード・スペンサー' },
         { text: '人生は学び続ける旅だ。', author: 'セネカ' },
         { text: '学びを愛しなさい。', author: 'プラトン' },
